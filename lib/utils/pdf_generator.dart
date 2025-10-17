@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -12,85 +14,97 @@ class PDFGenerator {
     SalesBill bill,
     CompanySettings companySettings,
   ) async {
+    final font = await _loadFont();
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(companySettings, isSalesInvoice: true),
-              pw.SizedBox(height: 20),
-              pw.Divider(),
-              pw.SizedBox(height: 20),
+          return pw.Theme(
+            data: pw.ThemeData.withFont(
+              base: font,
+              bold: font,
+              italic: font,
+              boldItalic: font,
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header
+                _buildHeader(companySettings, isSalesInvoice: true, font: font),
+                pw.SizedBox(height: 20),
+                pw.Divider(),
+                pw.SizedBox(height: 20),
 
-              // Invoice Info
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        'Bill To:',
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
+                // Invoice Info
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'Bill To:',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            font: font,
+                          ),
                         ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        bill.customerName,
-                        style: const pw.TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text(
-                        'Invoice: ${bill.id}',
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          fontWeight: pw.FontWeight.bold,
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          bill.customerName,
+                          style: pw.TextStyle(fontSize: 14, font: font),
                         ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        'Date: ${formatDate(bill.billDate)}',
-                        style: const pw.TextStyle(fontSize: 12),
-                      ),
-                    ],
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text(
+                          'Invoice: ${bill.id}',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            font: font,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'Date: ${formatDate(bill.billDate)}',
+                          style: pw.TextStyle(fontSize: 12, font: font),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                pw.SizedBox(height: 30),
+
+                // Items Table
+                _buildItemsTable(bill.items, font: font),
+
+                pw.SizedBox(height: 20),
+
+                // Summary
+                _buildSummary(bill.subtotal, bill.totalGst, bill.grandTotal,
+                    font: font),
+
+                if (bill.notes != null) ...[
+                  pw.SizedBox(height: 20),
+                  pw.Text(
+                    'Notes: ${bill.notes}',
+                    style: pw.TextStyle(fontSize: 10, font: font),
                   ),
                 ],
-              ),
 
-              pw.SizedBox(height: 30),
+                pw.Spacer(),
 
-              // Items Table
-              _buildItemsTable(bill.items),
-
-              pw.SizedBox(height: 20),
-
-              // Summary
-              _buildSummary(bill.subtotal, bill.totalGst, bill.grandTotal),
-
-              if (bill.notes != null) ...[
-                pw.SizedBox(height: 20),
-                pw.Text(
-                  'Notes: ${bill.notes}',
-                  style: const pw.TextStyle(fontSize: 10),
-                ),
+                // Footer
+                _buildFooter(font: font),
               ],
-
-              pw.Spacer(),
-
-              // Footer
-              _buildFooter(),
-            ],
+            ),
           );
         },
       ),
@@ -109,6 +123,8 @@ class PDFGenerator {
   ) async {
     final pdf = pw.Document();
 
+    final font = await _loadFont();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -117,7 +133,7 @@ class PDFGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
-              _buildHeader(companySettings, isSalesInvoice: false),
+              _buildHeader(companySettings, isSalesInvoice: false, font: font),
               pw.SizedBox(height: 20),
               pw.Divider(),
               pw.SizedBox(height: 20),
@@ -171,12 +187,13 @@ class PDFGenerator {
               pw.SizedBox(height: 30),
 
               // Items Table
-              _buildItemsTable(bill.items),
+              _buildItemsTable(bill.items, font: font),
 
               pw.SizedBox(height: 20),
 
               // Summary
-              _buildSummary(bill.subtotal, bill.totalGst, bill.grandTotal),
+              _buildSummary(bill.subtotal, bill.totalGst, bill.grandTotal,
+                  font: font),
 
               if (bill.notes != null) ...[
                 pw.SizedBox(height: 20),
@@ -189,7 +206,7 @@ class PDFGenerator {
               pw.Spacer(),
 
               // Footer
-              _buildFooter(),
+              _buildFooter(font: font),
             ],
           );
         },
@@ -214,6 +231,8 @@ class PDFGenerator {
   }) async {
     final pdf = pw.Document();
 
+    final font = await _loadFont();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -222,7 +241,7 @@ class PDFGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
-              _buildHeader(companySettings),
+              _buildHeader(companySettings, font: font),
               pw.SizedBox(height: 20),
               pw.Divider(),
               pw.SizedBox(height: 20),
@@ -267,7 +286,7 @@ class PDFGenerator {
 
               pw.Spacer(),
 
-              _buildFooter(),
+              _buildFooter(font: font),
             ],
           );
         },
@@ -281,7 +300,7 @@ class PDFGenerator {
 
   // Build Header
   static pw.Widget _buildHeader(CompanySettings settings,
-      {bool? isSalesInvoice}) {
+      {bool? isSalesInvoice, required pw.Font font}) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -346,7 +365,7 @@ class PDFGenerator {
   }
 
   // Build Items Table
-  static pw.Widget _buildItemsTable(List items) {
+  static pw.Widget _buildItemsTable(List items, {required pw.Font font}) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey300),
       children: [
@@ -354,24 +373,24 @@ class PDFGenerator {
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
           children: [
-            _buildTableCell('Product', isHeader: true),
-            _buildTableCell('HSN', isHeader: true),
-            _buildTableCell('Qty', isHeader: true),
-            _buildTableCell('Rate', isHeader: true),
-            _buildTableCell('GST%', isHeader: true),
-            _buildTableCell('Amount', isHeader: true),
+            _buildTableCell('Product', isHeader: true, font: font),
+            _buildTableCell('HSN', isHeader: true, font: font),
+            _buildTableCell('Qty', isHeader: true, font: font),
+            _buildTableCell('Rate', isHeader: true, font: font),
+            _buildTableCell('GST%', isHeader: true, font: font),
+            _buildTableCell('Amount', isHeader: true, font: font),
           ],
         ),
         // Items
         ...items.map((item) {
           return pw.TableRow(
             children: [
-              _buildTableCell(item.productName),
-              _buildTableCell(item.hsnCode),
-              _buildTableCell(item.quantity.toString()),
-              _buildTableCell(formatCurrency(item.rate)),
-              _buildTableCell('${item.gstPercent}%'),
-              _buildTableCell(formatCurrency(item.total)),
+              _buildTableCell(item.productName, font: font),
+              _buildTableCell(item.hsnCode, font: font),
+              _buildTableCell(item.quantity.toString(), font: font),
+              _buildTableCell(formatCurrency(item.rate), font: font),
+              _buildTableCell('${item.gstPercent}%', font: font),
+              _buildTableCell(formatCurrency(item.total), font: font),
             ],
           );
         }).toList(),
@@ -380,7 +399,8 @@ class PDFGenerator {
   }
 
   // Build Table Cell
-  static pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+  static pw.Widget _buildTableCell(String text,
+      {bool isHeader = false, required pw.Font font}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(8),
       child: pw.Text(
@@ -388,13 +408,15 @@ class PDFGenerator {
         style: pw.TextStyle(
           fontSize: isHeader ? 11 : 10,
           fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+          font: font,
         ),
       ),
     );
   }
 
   // Build Summary
-  static pw.Widget _buildSummary(double subtotal, double gst, double total) {
+  static pw.Widget _buildSummary(double subtotal, double gst, double total,
+      {required pw.Font font}) {
     return pw.Align(
       alignment: pw.Alignment.centerRight,
       child: pw.Container(
@@ -406,14 +428,15 @@ class PDFGenerator {
         ),
         child: pw.Column(
           children: [
-            _buildSummaryRow('Subtotal:', formatCurrency(subtotal)),
+            _buildSummaryRow('Subtotal:', formatCurrency(subtotal), font: font),
             pw.SizedBox(height: 8),
-            _buildSummaryRow('GST:', formatCurrency(gst)),
+            _buildSummaryRow('GST:', formatCurrency(gst), font: font),
             pw.Divider(),
             _buildSummaryRow(
               'Grand Total:',
               formatCurrency(total),
               isBold: true,
+              font: font,
             ),
           ],
         ),
@@ -423,7 +446,7 @@ class PDFGenerator {
 
   // Build Summary Row
   static pw.Widget _buildSummaryRow(String label, String value,
-      {bool isBold = false}) {
+      {bool isBold = false, required pw.Font font}) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
@@ -432,6 +455,7 @@ class PDFGenerator {
           style: pw.TextStyle(
             fontSize: isBold ? 12 : 10,
             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            font: font,
           ),
         ),
         pw.Text(
@@ -439,6 +463,7 @@ class PDFGenerator {
           style: pw.TextStyle(
             fontSize: isBold ? 12 : 10,
             fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            font: font,
           ),
         ),
       ],
@@ -478,20 +503,26 @@ class PDFGenerator {
   }
 
   // Build Footer
-  static pw.Widget _buildFooter() {
+  static pw.Widget _buildFooter({required pw.Font font}) {
     return pw.Column(
       children: [
         pw.Divider(),
         pw.SizedBox(height: 10),
         pw.Text(
           'Generated by BizEase - Business Management System',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey),
+          style: pw.TextStyle(fontSize: 9, color: PdfColors.grey, font: font),
         ),
         pw.Text(
           'Thank you for your business!',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey),
+          style: pw.TextStyle(fontSize: 9, color: PdfColors.grey, font: font),
         ),
       ],
     );
+  }
+
+  // Load NotoSans Font
+  static Future<pw.Font> _loadFont() async {
+    final fontData = await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
+    return pw.Font.ttf(fontData);
   }
 }
