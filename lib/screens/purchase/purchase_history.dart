@@ -252,8 +252,10 @@ class _BillCard extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () async {
-                        final settings = context.read<SettingsProvider>().settings;
-                        await PDFGenerator.generatePurchaseBillPDF(bill, settings);
+                        final settings =
+                            context.read<SettingsProvider>().settings;
+                        await PDFGenerator.generatePurchaseBillPDF(
+                            bill, settings);
                       },
                       icon: const Icon(Icons.print),
                       label: const Text('Print'),
