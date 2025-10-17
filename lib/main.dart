@@ -5,6 +5,7 @@ import 'providers/sales_provider.dart';
 import 'providers/purchase_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/inventory_provider.dart';
 import 'screens/home_screen.dart';
 import 'utils/constants.dart';
 
@@ -39,6 +40,7 @@ class BizEaseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => SalesProvider()),
         ChangeNotifierProvider(create: (_) => PurchaseProvider()),
+        ChangeNotifierProvider(create: (_) => InventoryProvider()..loadInventory()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

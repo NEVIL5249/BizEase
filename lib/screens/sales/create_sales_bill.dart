@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../models/sales_bill.dart';
 import '../../models/bill_item.dart';
 import '../../providers/sales_provider.dart';
+import '../../providers/inventory_provider.dart';
+import '../../models/inventory_item.dart';
 import '../../widgets/bill_item_row.dart';
 import '../../widgets/custom_button.dart';
 import '../../utils/constants.dart';
@@ -85,6 +87,20 @@ class _CreateSalesBillState extends State<CreateSalesBill> {
 
     setState(() => _isLoading = true);
 
+    final inventoryProvider = context.read<InventoryProvider>();
+
+    // Stock validation
+    for (final item in _items) {
+      final stockItem = inventoryProvider.getItemByName(item.productName);
+      if (stockItem == null || stockItem.quantity < item.quantity) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Insufficient stock for ${item.productName}')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+    }
+
     final bill = SalesBill(
       id: SalesBill.generateInvoiceNumber(),
       customerName: _customerNameController.text,
@@ -94,6 +110,29 @@ class _CreateSalesBillState extends State<CreateSalesBill> {
     );
 
     await context.read<SalesProvider>().addBill(bill);
+
+    // Deduct sold items from inventory
+    // for (final item in bill.items) {
+    //   inventoryProvider.deductItem(
+    //     InventoryItem(
+    //       productName: item.productName,
+    //       quantity: item.quantity.toInt(),
+    //       rate: item.rate,
+    //       gstPercent: item.gstPercent,
+    //       hsnCode: item.hsnCode,
+    //       size: item.size ?? '',
+    //       mrp: item.mrp ?? 0,
+    //     ),
+    //   );
+    // }
+
+    for (final item in bill.items) {
+  inventoryProvider.deductItem(
+    item.productName,
+    item.quantity.toInt(),  // quantity as int
+  );
+}
+
 
     setState(() => _isLoading = false);
 

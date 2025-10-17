@@ -150,6 +150,7 @@ enum NavigationItem {
   dashboard,
   sales,
   purchase,
+  inventory,
   reports,
   settings,
 }
@@ -182,6 +183,11 @@ final List<NavItem> navigationItems = [
     title: 'Purchase',
     icon: Icons.shopping_cart_rounded,
     item: NavigationItem.purchase,
+  ),
+  NavItem(
+    title: 'Inventory',       // ✅ added
+    icon: Icons.inventory_2_rounded,
+    item: NavigationItem.inventory,
   ),
   NavItem(
     title: 'Reports',

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../models/bill_item.dart';
+import '../models/inventory_item.dart';
+import '../providers/inventory_provider.dart';
 import '../utils/constants.dart';
 
+/// -------------------- Editable Row Widget --------------------
 class BillItemRow extends StatelessWidget {
   final BillItem item;
   final Function(BillItem) onChanged;
@@ -19,6 +23,8 @@ class BillItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inventoryProvider = context.watch<InventoryProvider>();
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -27,14 +33,49 @@ class BillItemRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Product Name
+                // Product Name with Autocomplete
                 Expanded(
                   flex: 3,
-                  child: _buildTextField(
-                    label: 'Product Name',
-                    value: item.productName,
-                    onChanged: (value) =>
-                        onChanged(item.copyWith(productName: value)),
+                  child: Autocomplete<String>(
+                    initialValue: TextEditingValue(text: item.productName),
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<String>.empty();
+                      }
+                      final filteredItems = inventoryProvider.inventory
+                          .where((invItem) => invItem.productName
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase()))
+                          .map((e) => e.productName);
+                      if (filteredItems.isEmpty && textEditingValue.text.isNotEmpty) {
+                        return ['No items found'];
+                      }
+                      return filteredItems;
+                    },
+                    onSelected: (selected) {
+                      final invItem = inventoryProvider.getItemByName(selected);
+                      if (invItem != null) {
+                        onChanged(item.copyWith(
+                          productName: invItem.productName,
+                          rate: invItem.rate,
+                          gstPercent: invItem.gstPercent,
+                          hsnCode: invItem.hsnCode,
+                          mrp: invItem.mrp,
+                          size: invItem.size,
+                        ));
+                      }
+                    },
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Product Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) => onChanged(item.copyWith(productName: value)),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -45,8 +86,7 @@ class BillItemRow extends StatelessWidget {
                   child: _buildTextField(
                     label: 'HSN Code',
                     value: item.hsnCode,
-                    onChanged: (value) =>
-                        onChanged(item.copyWith(hsnCode: value)),
+                    onChanged: (value) => onChanged(item.copyWith(hsnCode: value)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -57,8 +97,7 @@ class BillItemRow extends StatelessWidget {
                   child: _buildNumberField(
                     label: 'Qty',
                     value: item.quantity,
-                    onChanged: (value) =>
-                        onChanged(item.copyWith(quantity: value)),
+                    onChanged: (value) => onChanged(item.copyWith(quantity: value)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -79,8 +118,7 @@ class BillItemRow extends StatelessWidget {
                   flex: 1,
                   child: _buildGSTDropdown(
                     value: item.gstPercent,
-                    onChanged: (value) =>
-                        onChanged(item.copyWith(gstPercent: value)),
+                    onChanged: (value) => onChanged(item.copyWith(gstPercent: value)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -114,8 +152,7 @@ class BillItemRow extends StatelessWidget {
                     child: _buildTextField(
                       label: 'Size/Unit',
                       value: item.size ?? '',
-                      onChanged: (value) =>
-                          onChanged(item.copyWith(size: value)),
+                      onChanged: (value) => onChanged(item.copyWith(size: value)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -123,8 +160,7 @@ class BillItemRow extends StatelessWidget {
                     child: _buildNumberField(
                       label: 'MRP',
                       value: item.mrp ?? 0,
-                      onChanged: (value) =>
-                          onChanged(item.copyWith(mrp: value)),
+                      onChanged: (value) => onChanged(item.copyWith(mrp: value)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -143,6 +179,7 @@ class BillItemRow extends StatelessWidget {
     );
   }
 
+  // -------------------- Helpers --------------------
   Widget _buildTextField({
     required String label,
     required String value,
@@ -224,7 +261,7 @@ class BillItemRow extends StatelessWidget {
   }
 }
 
-// Compact version for history/list views
+/// -------------------- Compact ListTile Widget --------------------
 class BillItemListTile extends StatelessWidget {
   final BillItem item;
 

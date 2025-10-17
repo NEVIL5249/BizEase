@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../models/purchase_bill.dart';
 import '../../models/bill_item.dart';
 import '../../providers/purchase_provider.dart';
+import '../../models/inventory_item.dart';
+import '../../providers/inventory_provider.dart';
 import '../../widgets/bill_item_row.dart';
 import '../../widgets/custom_button.dart';
 import '../../utils/constants.dart';
@@ -99,7 +101,23 @@ class _CreatePurchaseBillState extends State<CreatePurchaseBill> {
       notes: _notesController.text.isEmpty ? null : _notesController.text,
     );
 
+    final inventoryProvider = context.read<InventoryProvider>();
     await context.read<PurchaseProvider>().addBill(bill);
+
+for (final item in bill.items) {
+  inventoryProvider.addOrUpdateItem(
+    InventoryItem(
+      productName: item.productName,
+      quantity: item.quantity.toInt(),          // convert double -> int
+      rate: item.rate,
+      gstPercent: item.gstPercent,      // convert double -> int
+      hsnCode: item.hsnCode,
+      size: item.size ?? '',                     // if InventoryItem.size is non-nullable
+      mrp: item.mrp ?? 0,                        // if InventoryItem.mrp is non-nullable
+    ),
+  );
+}
+
 
     setState(() => _isLoading = false);
 

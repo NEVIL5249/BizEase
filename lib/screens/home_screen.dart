@@ -8,6 +8,8 @@ import 'sales/sales_screen.dart';
 import 'purchase/purchase_screen.dart';
 import 'reports/reports_screen.dart';
 import 'package:BizEase/settings/settings_screen.dart';
+import 'package:BizEase/screens/inventory/inventory_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -158,6 +160,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         return 'Sales Management';
       case NavigationItem.purchase:
         return 'Purchase Management';
+      case NavigationItem.inventory:       // ✅ added
+        return 'Inventory Management';
       case NavigationItem.reports:
         return 'Reports';
       case NavigationItem.settings:
@@ -173,6 +177,8 @@ class _HomeScreenState extends State<HomeScreen> with WindowListener {
         return const SalesScreen();
       case NavigationItem.purchase:
         return const PurchaseScreen();
+      case NavigationItem.inventory:       // ✅ added
+        return const InventoryScreen();
       case NavigationItem.reports:
         return const ReportsScreen();
       case NavigationItem.settings:
