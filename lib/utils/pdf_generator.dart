@@ -22,7 +22,7 @@ class PDFGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
-              _buildHeader(companySettings, true),
+              _buildHeader(companySettings, isSalesInvoice: true),
               pw.SizedBox(height: 20),
               pw.Divider(),
               pw.SizedBox(height: 20),
@@ -117,7 +117,7 @@ class PDFGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
-              _buildHeader(companySettings, false),
+              _buildHeader(companySettings, isSalesInvoice: false),
               pw.SizedBox(height: 20),
               pw.Divider(),
               pw.SizedBox(height: 20),
@@ -222,7 +222,7 @@ class PDFGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               // Header
-              _buildHeader(companySettings, false),
+              _buildHeader(companySettings),
               pw.SizedBox(height: 20),
               pw.Divider(),
               pw.SizedBox(height: 20),
@@ -280,7 +280,8 @@ class PDFGenerator {
   }
 
   // Build Header
-  static pw.Widget _buildHeader(CompanySettings settings, bool isSalesInvoice) {
+  static pw.Widget _buildHeader(CompanySettings settings,
+      {bool? isSalesInvoice}) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -321,7 +322,9 @@ class PDFGenerator {
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 pw.Text(
-                  isSalesInvoice ? 'SALES INVOICE' : 'PURCHASE ORDER',
+                  isSalesInvoice == null
+                      ? ''
+                      : (isSalesInvoice ? 'SALES INVOICE' : 'PURCHASE ORDER'),
                   style: pw.TextStyle(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/sales_provider.dart';
 import '../../providers/purchase_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../utils/constants.dart';
+import '../../utils/pdf_generator.dart';
+import '../../utils/excel_generator_new.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -205,11 +208,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const Spacer(),
                   CustomButton(
                     text: 'Export as PDF',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('PDF export feature coming soon!'),
-                        ),
+                    onPressed: () async {
+                      final settings =
+                          context.read<SettingsProvider>().settings;
+                      await PDFGenerator.generateReportPDF(
+                        startDate: _startDate,
+                        endDate: _endDate,
+                        totalSales: totalSales,
+                        totalPurchases: totalPurchases,
+                        totalGst: totalGst,
+                        salesCount: salesCount,
+                        purchaseCount: purchaseCount,
+                        companySettings: settings,
                       );
                     },
                     icon: Icons.picture_as_pdf,
@@ -218,11 +228,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const SizedBox(width: 12),
                   CustomButton(
                     text: 'Export as Excel',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Excel export feature coming soon!'),
-                        ),
+                    onPressed: () async {
+                      final salesBills = salesProvider.getBillsByDateRange(
+                          _startDate, _endDate);
+                      final purchaseBills = purchaseProvider
+                          .getBillsByDateRange(_startDate, _endDate);
+                      await ExcelGenerator.generateBusinessReportExcel(
+                        startDate: _startDate,
+                        endDate: _endDate,
+                        totalSales: totalSales,
+                        totalPurchases: totalPurchases,
+                        totalGst: totalGst,
+                        salesCount: salesCount,
+                        purchaseCount: purchaseCount,
+                        salesBills: salesBills,
+                        purchaseBills: purchaseBills,
                       );
                     },
                     icon: Icons.table_chart,
